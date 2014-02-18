@@ -41,10 +41,9 @@ AbstractPage {
         })
     }
 
-    SilicaListView {
-        id: commentListView
+    SilicaFlickable {
+
         anchors.fill: parent
-        model: commentModel
 
         PullDownMenu {
             MenuItem {
@@ -76,271 +75,286 @@ AbstractPage {
             }
         }
 
-        header: link ? headerComponent : null
+        Column {
+            width: parent.width
+            id: headerContainer
+            PageHeader { title: commentPage.title }
+        }
 
-        Component {
-            id: headerComponent
+        SilicaListView {
+            id: commentListView
+            model: commentModel
 
-            Column {
-                width: parent.width
-                height: childrenRect.height
+            anchors.bottom: parent.bottom
+            anchors.top: headerContainer.bottom
+            width: parent.width
+            clip: true
 
-                PageHeader { title: commentPage.title }
+            header: link ? headerComponent : null
 
-                Item {
-                    id: titleWrapper
-                    anchors { left: parent.left; right: parent.right }
-                    height: Math.max(titleColumn.height, thumbnail.height)
-
-                    Column {
-                        id: titleColumn
-                        anchors {
-                            left: parent.left
-                            right: thumbnail.left
-                            margins: constant.paddingMedium
-                            verticalCenter: parent.verticalCenter
-                        }
-                        height: childrenRect.height
-                        spacing: constant.paddingMedium
-
-                        Text {
-                            id: titleText
-                            anchors { left: parent.left; right: parent.right }
-                            wrapMode: Text.Wrap
-                            font.pixelSize: constant.fontSizeDefault
-                            color: constant.colorLight
-                            font.bold: true
-                            text: link.title + " (" + link.domain + ")"
-                        }
-
-                        Text {
-                            id: timeAndAuthorText
-                            anchors { left: parent.left; right: parent.right }
-                            wrapMode: Text.Wrap
-                            font.pixelSize: constant.fontSizeDefault
-                            color: constant.colorMid
-                            text: "submitted " + link.created + " by " + link.author +
-                                  " to " + link.subreddit
-                        }
-
-                        Row {
-                            anchors { left: parent.left; right: parent.right }
-                            spacing: constant.paddingMedium
-
-                            CustomCountBubble {
-                                value: link.score
-                                colorMode: link.likes
-                            }
-
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                font.pixelSize: constant.fontSizeDefault
-                                color: constant.colorLight
-                                text: "points"
-                            }
-
-                            CustomCountBubble {
-                                value: link.commentsCount
-                            }
-
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                font.pixelSize: constant.fontSizeDefault
-                                color: constant.colorLight
-                                text: "comments"
-                            }
-
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                font.pixelSize: constant.fontSizeDefault
-                                color: "green"
-                                visible: link.isSticky
-                                text: "Sticky"
-                            }
-
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                font.pixelSize: constant.fontSizeDefault
-                                color: "red"
-                                visible: link.isNSFW
-                                text: "NSFW"
-                            }
-                        }
-                    }
-
-                    Image {
-                        id: thumbnail
-                        anchors {
-                            right: parent.right
-                            verticalCenter: parent.verticalCenter
-                            rightMargin: constant.paddingMedium
-                        }
-                        source: link.thumbnailUrl
-                        asynchronous: true
-                    }
-                }
-
-                Row {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    height: Theme.iconSizeLarge
-                    spacing: constant.paddingLarge
-
-                    IconButton {
-                        anchors.verticalCenter: parent.verticalCenter
-                        icon.height: Theme.iconSizeLarge - constant.paddingMedium
-                        icon.width: Theme.iconSizeLarge - constant.paddingMedium
-                        icon.source: "image://theme/icon-l-up"
-                        enabled: quickdditManager.isSignedIn && !linkVoteManager.busy
-                        highlighted: link.likes == 1
-                        onClicked: {
-                            if (highlighted)
-                                linkVoteManager.vote(link.fullname, VoteManager.Unvote)
-                            else
-                                linkVoteManager.vote(link.fullname, VoteManager.Upvote)
-                        }
-                    }
-
-                    IconButton {
-                        anchors.verticalCenter: parent.verticalCenter
-                        icon.height: Theme.iconSizeLarge - constant.paddingMedium
-                        icon.width: Theme.iconSizeLarge - constant.paddingMedium
-                        icon.source: "image://theme/icon-l-down"
-                        enabled: quickdditManager.isSignedIn && !linkVoteManager.busy
-                        highlighted: link.likes == -1
-                        onClicked: {
-                            if (highlighted)
-                                linkVoteManager.vote(link.fullname, VoteManager.Unvote)
-                            else
-                                linkVoteManager.vote(link.fullname, VoteManager.Downvote)
-                        }
-                    }
-
-                    IconButton {
-                        anchors.verticalCenter: parent.verticalCenter
-                        icon.height: Theme.iconSizeLarge - constant.paddingMedium
-                        icon.width: Theme.iconSizeLarge - constant.paddingMedium
-                        icon.source: "image://theme/icon-l-image"
-                        enabled: {
-                            if (!link) return false;
-                            if (link.domain == "i.imgur.com" || link.domain == "imgur.com")
-                                return true;
-                            if (/^https?:\/\/.+\.(jpe?g|png|gif)/i.test(link.url))
-                                return true;
-                            else
-                                return false;
-                        }
-                        onClicked: {
-                            var p = {};
-                            if (link.domain == "imgur.com")
-                                p.imgurUrl = link.url;
-                            else
-                                p.imageUrl = link.url;
-                            pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"), p);
-                        }
-                    }
-
-                    IconButton {
-                        anchors.verticalCenter: parent.verticalCenter
-                        icon.height: Theme.iconSizeLarge - constant.paddingLarge
-                        icon.width: Theme.iconSizeLarge - constant.paddingLarge
-                        icon.source: "image://theme/icon-lock-social"
-                        onClicked: {
-                            if (/^https?:\/\/(\w+\.)?reddit.com(\/r\/\w+)?\/comments\/\w+/.test(link.url))
-                                pageStack.push(Qt.resolvedUrl("CommentPage.qml"), {linkPermalink: link.url});
-                            else
-                                globalUtils.createOpenLinkDialog(link.url);
-                        }
-                    }
-                }
+            Component {
+                id: headerComponent
 
                 Column {
-                    id: bodyWrapper
-                    anchors { left: parent.left; right: parent.right }
+                    width: parent.width
                     height: childrenRect.height
-                    spacing: constant.paddingMedium
-                    visible: bodyText.text.length > 0
+
+                    Item {
+                        id: titleWrapper
+                        anchors { left: parent.left; right: parent.right }
+                        height: Math.max(titleColumn.height, thumbnail.height)
+
+                        Column {
+                            id: titleColumn
+                            anchors {
+                                left: parent.left
+                                right: thumbnail.left
+                                margins: constant.paddingMedium
+                                verticalCenter: parent.verticalCenter
+                            }
+                            height: childrenRect.height
+                            spacing: constant.paddingMedium
+
+                            Text {
+                                id: titleText
+                                anchors { left: parent.left; right: parent.right }
+                                wrapMode: Text.Wrap
+                                font.pixelSize: constant.fontSizeDefault
+                                color: constant.colorLight
+                                font.bold: true
+                                text: link.title + " (" + link.domain + ")"
+                            }
+
+                            Text {
+                                id: timeAndAuthorText
+                                anchors { left: parent.left; right: parent.right }
+                                wrapMode: Text.Wrap
+                                font.pixelSize: constant.fontSizeDefault
+                                color: constant.colorMid
+                                text: "submitted " + link.created + " by " + link.author +
+                                      " to " + link.subreddit
+                            }
+
+                            Row {
+                                anchors { left: parent.left; right: parent.right }
+                                spacing: constant.paddingMedium
+
+                                CustomCountBubble {
+                                    value: link.score
+                                    colorMode: link.likes
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    font.pixelSize: constant.fontSizeDefault
+                                    color: constant.colorLight
+                                    text: "points"
+                                }
+
+                                CustomCountBubble {
+                                    value: link.commentsCount
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    font.pixelSize: constant.fontSizeDefault
+                                    color: constant.colorLight
+                                    text: "comments"
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    font.pixelSize: constant.fontSizeDefault
+                                    color: "green"
+                                    visible: link.isSticky
+                                    text: "Sticky"
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    font.pixelSize: constant.fontSizeDefault
+                                    color: "red"
+                                    visible: link.isNSFW
+                                    text: "NSFW"
+                                }
+                            }
+                        }
+
+                        Image {
+                            id: thumbnail
+                            anchors {
+                                right: parent.right
+                                verticalCenter: parent.verticalCenter
+                                rightMargin: constant.paddingMedium
+                            }
+                            source: link.thumbnailUrl
+                            asynchronous: true
+                        }
+                    }
+
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        height: Theme.iconSizeLarge
+                        spacing: constant.paddingLarge
+
+                        IconButton {
+                            anchors.verticalCenter: parent.verticalCenter
+                            icon.height: Theme.iconSizeLarge - constant.paddingMedium
+                            icon.width: Theme.iconSizeLarge - constant.paddingMedium
+                            icon.source: "image://theme/icon-l-up"
+                            enabled: quickdditManager.isSignedIn && !linkVoteManager.busy
+                            highlighted: link.likes == 1
+                            onClicked: {
+                                if (highlighted)
+                                    linkVoteManager.vote(link.fullname, VoteManager.Unvote)
+                                else
+                                    linkVoteManager.vote(link.fullname, VoteManager.Upvote)
+                            }
+                        }
+
+                        IconButton {
+                            anchors.verticalCenter: parent.verticalCenter
+                            icon.height: Theme.iconSizeLarge - constant.paddingMedium
+                            icon.width: Theme.iconSizeLarge - constant.paddingMedium
+                            icon.source: "image://theme/icon-l-down"
+                            enabled: quickdditManager.isSignedIn && !linkVoteManager.busy
+                            highlighted: link.likes == -1
+                            onClicked: {
+                                if (highlighted)
+                                    linkVoteManager.vote(link.fullname, VoteManager.Unvote)
+                                else
+                                    linkVoteManager.vote(link.fullname, VoteManager.Downvote)
+                            }
+                        }
+
+                        IconButton {
+                            anchors.verticalCenter: parent.verticalCenter
+                            icon.height: Theme.iconSizeLarge - constant.paddingMedium
+                            icon.width: Theme.iconSizeLarge - constant.paddingMedium
+                            icon.source: "image://theme/icon-l-image"
+                            enabled: {
+                                if (!link) return false;
+                                if (link.domain == "i.imgur.com" || link.domain == "imgur.com")
+                                    return true;
+                                if (/^https?:\/\/.+\.(jpe?g|png|gif)/i.test(link.url))
+                                    return true;
+                                else
+                                    return false;
+                            }
+                            onClicked: {
+                                var p = {};
+                                if (link.domain == "imgur.com")
+                                    p.imgurUrl = link.url;
+                                else
+                                    p.imageUrl = link.url;
+                                pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"), p);
+                            }
+                        }
+
+                        IconButton {
+                            anchors.verticalCenter: parent.verticalCenter
+                            icon.height: Theme.iconSizeLarge - constant.paddingLarge
+                            icon.width: Theme.iconSizeLarge - constant.paddingLarge
+                            icon.source: "image://theme/icon-lock-social"
+                            onClicked: {
+                                if (/^https?:\/\/(\w+\.)?reddit.com(\/r\/\w+)?\/comments\/\w+/.test(link.url))
+                                    pageStack.push(Qt.resolvedUrl("CommentPage.qml"), {linkPermalink: link.url});
+                                else
+                                    globalUtils.createOpenLinkDialog(link.url);
+                            }
+                        }
+                    }
+
+                    Column {
+                        id: bodyWrapper
+                        anchors { left: parent.left; right: parent.right }
+                        height: childrenRect.height
+                        spacing: constant.paddingMedium
+                        visible: bodyText.text.length > 0
+
+                        Separator {
+                            anchors { left: parent.left; right: parent.right }
+                            color: constant.colorMid
+                        }
+
+                        Text {
+                            id: bodyText
+                            anchors { left: parent.left; right: parent.right; margins: constant.paddingMedium }
+                            wrapMode: Text.Wrap
+                            textFormat: Text.RichText
+                            font.pixelSize: constant.fontSizeDefault
+                            color: constant.colorLight
+                            text: link.text
+                            onLinkActivated: globalUtils.openInTextLink(link);
+                        }
+
+                        // For spacing after text
+                        Item { anchors { left: parent.left; right: parent.right } height: 1 }
+                    }
 
                     Separator {
                         anchors { left: parent.left; right: parent.right }
                         color: constant.colorMid
                     }
 
-                    Text {
-                        id: bodyText
-                        anchors { left: parent.left; right: parent.right; margins: constant.paddingMedium }
-                        wrapMode: Text.Wrap
-                        textFormat: Text.RichText
-                        font.pixelSize: constant.fontSizeDefault
-                        color: constant.colorLight
-                        text: link.text
-                        onLinkActivated: globalUtils.openInTextLink(link);
-                    }
+                    Item {
+                        anchors { left: parent.left; right: parent.right }
+                        height: visible ? viewAllCommentColumn.height + 2 * constant.paddingMedium : 0
+                        visible: commentModel.commentPermalink
 
-                    // For spacing after text
-                    Item { anchors { left: parent.left; right: parent.right } height: 1 }
-                }
+                        Column {
+                            id: viewAllCommentColumn
+                            anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter }
+                            height: childrenRect.height
 
-                Separator {
-                    anchors { left: parent.left; right: parent.right }
-                    color: constant.colorMid
-                }
+                            Label {
+                                anchors { left: parent.left; right: parent.right; margins: constant.paddingMedium }
+                                wrapMode: Text.Wrap
+                                font.bold: true
+                                horizontalAlignment: Text.AlignHCenter
+                                text: "Viewing a single comment's thread"
+                            }
 
-                Item {
-                    anchors { left: parent.left; right: parent.right }
-                    height: visible ? viewAllCommentColumn.height + 2 * constant.paddingMedium : 0
-                    visible: commentModel.commentPermalink
-
-                    Column {
-                        id: viewAllCommentColumn
-                        anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter }
-                        height: childrenRect.height
-
-                        Label {
-                            anchors { left: parent.left; right: parent.right; margins: constant.paddingMedium }
-                            wrapMode: Text.Wrap
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            text: "Viewing a single comment's thread"
-                        }
-
-                        Button {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "View All Comments"
-                            onClicked: {
-                                commentModel.commentPermalink = false;
-                                commentModel.refresh(false);
+                            Button {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: "View All Comments"
+                                onClicked: {
+                                    commentModel.commentPermalink = false;
+                                    commentModel.refresh(false);
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        delegate: CommentDelegate {
-            id: commentDelegate
-            menu: Component { CommentMenu {} }
-            onClicked: {
-                var p = {comment: model, linkPermalink: link.permalink, commentVoteManager: commentVoteManager};
-                var dialog = showMenu(p);
-                dialog.showParent.connect(function() {
-                    var parentIndex = commentModel.getParentIndex(index);
-                    commentDelegate.ListView.view.positionViewAtIndex(parentIndex, ListView.Contain);
-                    commentDelegate.ListView.view.currentIndex = parentIndex;
-                    commentDelegate.ListView.view.currentItem.highlight();
-                })
-                dialog.replyClicked.connect(function() { __createCommentDialog("Reply Comment", model.fullname); });
-                dialog.editClicked.connect(function() {
-                    __createCommentDialog("Edit Comment", model.fullname, model.rawBody, true);
-                });
-                dialog.deleteClicked.connect(function() {
-                    commentDelegate.remorseAction("Deleting comment", function() {
-                        commentManager.deleteComment(model.fullname);
+            delegate: CommentDelegate {
+                id: commentDelegate
+                menu: Component { CommentMenu {} }
+                onClicked: {
+                    var p = {comment: model, linkPermalink: link.permalink, commentVoteManager: commentVoteManager};
+                    var dialog = showMenu(p);
+                    dialog.showParent.connect(function() {
+                        var parentIndex = commentModel.getParentIndex(index);
+                        commentDelegate.ListView.view.positionViewAtIndex(parentIndex, ListView.Contain);
+                        commentDelegate.ListView.view.currentIndex = parentIndex;
+                        commentDelegate.ListView.view.currentItem.highlight();
                     })
-                });
+                    dialog.replyClicked.connect(function() { __createCommentDialog("Reply Comment", model.fullname); });
+                    dialog.editClicked.connect(function() {
+                        __createCommentDialog("Edit Comment", model.fullname, model.rawBody, true);
+                    });
+                    dialog.deleteClicked.connect(function() {
+                        commentDelegate.remorseAction("Deleting comment", function() {
+                            commentManager.deleteComment(model.fullname);
+                        })
+                    });
+                }
             }
+
+            VerticalScrollDecorator {}
         }
 
-        VerticalScrollDecorator {}
     }
 
     CommentModel {

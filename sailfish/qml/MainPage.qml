@@ -80,10 +80,8 @@ AbstractPage {
         });
     }
 
-    SilicaListView {
-        id: linkListView
+    SilicaFlickable {
         anchors.fill: parent
-        model: linkModel
 
         PullDownMenu {
             MenuItem {
@@ -118,30 +116,45 @@ AbstractPage {
             }
         }
 
-        header: PageHeader { title: mainPage.title }
+        Column {
+            width: parent.width
+            id: headerContainer
+            PageHeader { title: mainPage.title }
+        }
 
-        delegate: LinkDelegate {
-            menu: Component { LinkMenu {} }
-            showMenuOnPressAndHold: false
-            showSubreddit: linkModel.location != LinkModel.Subreddit
-            onClicked: {
-                var p = { link: model, linkVoteManager: linkVoteManager };
-                pageStack.push(Qt.resolvedUrl("CommentPage.qml"), p);
+        SilicaListView {
+            id: linkListView
+            anchors.bottom: parent.bottom
+            anchors.top: headerContainer.bottom
+            width: parent.width
+            model: linkModel
+            clip: true
+
+
+            delegate: LinkDelegate {
+                menu: Component { LinkMenu {} }
+                showMenuOnPressAndHold: false
+                showSubreddit: linkModel.location != LinkModel.Subreddit
+                onClicked: {
+                    var p = { link: model, linkVoteManager: linkVoteManager };
+                    pageStack.push(Qt.resolvedUrl("CommentPage.qml"), p);
+                }
+                onPressAndHold: showMenu({link: model, linkVoteManager: linkVoteManager});
             }
-            onPressAndHold: showMenu({link: model, linkVoteManager: linkVoteManager});
+
+            footer: LoadingFooter { visible: linkModel.busy; listViewItem: linkListView }
+
+            onAtYEndChanged: {
+                if (atYEnd && count > 0 && !linkModel.busy && linkModel.canLoadMore)
+                    linkModel.refresh(true);
+            }
+
+            ViewPlaceholder { enabled: linkListView.count == 0 && !linkModel.busy; text: "Nothing here :(" }
+
+            VerticalScrollDecorator {}
         }
-
-        footer: LoadingFooter { visible: linkModel.busy; listViewItem: linkListView }
-
-        onAtYEndChanged: {
-            if (atYEnd && count > 0 && !linkModel.busy && linkModel.canLoadMore)
-                linkModel.refresh(true);
-        }
-
-        ViewPlaceholder { enabled: linkListView.count == 0 && !linkModel.busy; text: "Nothing here :(" }
-
-        VerticalScrollDecorator {}
     }
+
 
     LinkModel {
         id: linkModel
