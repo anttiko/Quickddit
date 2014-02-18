@@ -48,6 +48,10 @@ AbstractPage {
 
         PullDownMenu {
             MenuItem {
+                text: "Go to /r/" + link.subreddit
+                onClicked: pageStack.push(Qt.resolvedUrl("MainPage.qml"), {}).refresh(link.subreddit);
+            }
+            MenuItem {
                 enabled: !!link
                 text: "Permalink"
                 onClicked: globalUtils.createOpenLinkDialog(QMLUtils.toAbsoluteUrl(link.permalink));
