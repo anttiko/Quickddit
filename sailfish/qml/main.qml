@@ -54,6 +54,7 @@ ApplicationWindow {
             if (!url)
                 return;
 
+            var subredditregex = /^https?:\/\/(\w+\.)?reddit.com\/r\/(\w+)?/;
             if (/^https?:\/\/imgur\.com/.test(url))
                 pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"), {imgurUrl: url});
             else if (/^https?:\/\/i\.imgur\.com/.test(url))
@@ -62,6 +63,11 @@ ApplicationWindow {
                 pageStack.push(Qt.resolvedUrl("ImageViewPage.qml"), {imageUrl: url});
             else if (/^https?:\/\/(\w+\.)?reddit.com(\/r\/\w+)?\/comments\/\w+/.test(url))
                 pageStack.push(Qt.resolvedUrl("CommentPage.qml"), {linkPermalink: url});
+            else if (subredditregex.test(url))
+            {
+                var subreddit = subredditregex.exec(url)[2];
+                pageStack.push(Qt.resolvedUrl("MainPage.qml"), {}).refresh(subreddit);
+            }
             else
                 createOpenLinkDialog(url);
         }

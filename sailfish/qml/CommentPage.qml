@@ -240,7 +240,12 @@ AbstractPage {
                         icon.height: Theme.iconSizeLarge - constant.paddingLarge
                         icon.width: Theme.iconSizeLarge - constant.paddingLarge
                         icon.source: "image://theme/icon-lock-social"
-                        onClicked: globalUtils.createOpenLinkDialog(link.url);
+                        onClicked: {
+                            if (/^https?:\/\/(\w+\.)?reddit.com(\/r\/\w+)?\/comments\/\w+/.test(link.url))
+                                pageStack.push(Qt.resolvedUrl("CommentPage.qml"), {linkPermalink: link.url});
+                            else
+                                globalUtils.createOpenLinkDialog(link.url);
+                        }
                     }
                 }
 
