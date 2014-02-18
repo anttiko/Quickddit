@@ -30,6 +30,14 @@ ContextMenu {
     // when the menu is closing SilicaListView will override the contentY causes the positioning to failed
     // position at menu destruction to fix this
     property bool __showParentAtDestruction: false
+    // TODO: this is ugly :(
+    property bool __showNextAtDestruction: false
+    property bool __showPrevAtDestruction: false
+    property bool __showRootAtDestruction: false
+    signal showNext
+    signal showPrev
+    signal showRoot
+
     signal showParent
     signal replyClicked
     signal editClicked
@@ -77,13 +85,38 @@ ContextMenu {
         }
     }
     MenuItem {
-        enabled: comment.depth > 0
+        visible: comment.depth > 0
         text: "Parent"
         onClicked: __showParentAtDestruction = true;
+    }
+
+    MenuItem {
+        visible: comment.depth > 0
+        text: "Root"
+        onClicked: __showRootAtDestruction = true;
+    }
+
+    MenuItem {
+        visible: comment.depth == 0
+        text: "Previous"
+        onClicked: __showPrevAtDestruction = true;
+    }
+
+    MenuItem {
+        visible: comment.depth == 0
+        text: "Next"
+        onClicked: __showNextAtDestruction = true;
     }
 
     Component.onDestruction: {
         if (__showParentAtDestruction)
             showParent();
+        if (__showNextAtDestruction)
+            showNext();
+        if (__showPrevAtDestruction)
+            showPrev();
+        if (__showRootAtDestruction)
+            showRoot();
+
     }
 }

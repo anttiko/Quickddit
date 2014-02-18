@@ -340,6 +340,31 @@ AbstractPage {
                         commentDelegate.ListView.view.currentIndex = parentIndex;
                         commentDelegate.ListView.view.currentItem.highlight();
                     })
+                    dialog.showPrev.connect(function() {
+                        var prevIndex = commentModel.getPrevIndex(index);
+                        if (prevIndex != index)
+                        {
+                            commentDelegate.ListView.view.positionViewAtIndex(prevIndex, ListView.Contain);
+                            commentDelegate.ListView.view.currentIndex = prevIndex;
+                            commentDelegate.ListView.view.currentItem.highlight();
+                        }
+                    })
+                    dialog.showNext.connect(function() {
+                        var nextIndex = commentModel.getNextIndex(index);
+                        if (nextIndex != index)
+                        {
+                            commentDelegate.ListView.view.positionViewAtIndex(nextIndex, ListView.Contain);
+                            commentDelegate.ListView.view.currentIndex = nextIndex;
+                            commentDelegate.ListView.view.currentItem.highlight();
+                        }
+                    })
+                    dialog.showRoot.connect(function() {
+                        var rootIndex = commentModel.getRootIndex(index);
+                        commentDelegate.ListView.view.positionViewAtIndex(rootIndex, ListView.Contain);
+                        commentDelegate.ListView.view.currentIndex = rootIndex;
+                        commentDelegate.ListView.view.currentItem.highlight();
+                    })
+
                     dialog.replyClicked.connect(function() { __createCommentDialog("Reply Comment", model.fullname); });
                     dialog.editClicked.connect(function() {
                         __createCommentDialog("Edit Comment", model.fullname, model.rawBody, true);
