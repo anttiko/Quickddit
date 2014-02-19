@@ -42,6 +42,7 @@ ContextMenu {
     signal replyClicked
     signal editClicked
     signal deleteClicked
+    signal collapse
 
     MenuItem {
         id: upvoteButton
@@ -90,6 +91,7 @@ ContextMenu {
         onClicked: __showParentAtDestruction = true;
     }
 
+    /*
     MenuItem {
         visible: comment.depth > 0
         text: "Root"
@@ -107,6 +109,12 @@ ContextMenu {
         text: "Next"
         onClicked: __showNextAtDestruction = true;
     }
+    */
+
+    MenuItem {
+        text: "Collapse"
+        onClicked: collapse();
+    }
 
     Component.onDestruction: {
         if (__showParentAtDestruction)
@@ -117,6 +125,5 @@ ContextMenu {
             showPrev();
         if (__showRootAtDestruction)
             showRoot();
-
     }
 }

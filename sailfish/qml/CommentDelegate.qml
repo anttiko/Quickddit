@@ -38,11 +38,12 @@ Item {
     }
 
     width: ListView.view.width
-    height: mainItem.height
+    height: mainItem.visible ? mainItem.height : 0
 
     Row {
         id: lineRow
         anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+        visible: model.visibility != "hidden"
 
         Repeater {
             model: depth
@@ -73,6 +74,7 @@ Item {
         contentHeight: mainColumn.height + 2 * constant.paddingMedium
         showMenuOnPressAndHold: false
         enabled: model.isValid
+        visible: model.visibility != "hidden"
 
         Rectangle {
             id: highlightRect
@@ -101,7 +103,7 @@ Item {
                 left: parent.left; right: parent.right; margins: constant.paddingMedium
                 verticalCenter: parent.verticalCenter
             }
-            height: authorTextWrapper.height + commentBodyText.paintedHeight
+            height: authorTextWrapper.height + (model.visibility == "visible" ? commentBodyText.paintedHeight : 0)
             spacing: constant.paddingSmall
 
             Item {
@@ -120,6 +122,7 @@ Item {
                 }
 
                 Loader {
+                    visible: model.visibility == "visible"
                     id: scoreLoader
                     anchors { left: commentAuthorText.right; leftMargin: constant.paddingSmall }
                     sourceComponent: model.isScoreHidden ? scoreHiddenComponent : scoreBubbleComponent
@@ -144,6 +147,7 @@ Item {
                 }
 
                 Text {
+                    visible: model.visibility == "visible"
                     anchors {
                         left: scoreLoader.right
                         right: parent.right
@@ -156,9 +160,24 @@ Item {
                     elide: Text.ElideRight
                     text: model.created
                 }
+                Text {
+                    visible: model.visibility == "collapsed"
+                    anchors {
+                        left: commentAuthorText.right
+                        right: parent.right
+                        verticalCenter: parent.verticalCenter
+                        margins: constant.paddingSmall
+                    }
+                    font.pixelSize: constant.fontSizeDefault
+                    color: mainItem.enabled ? (mainItem.highlighted ? Theme.secondaryHighlightColor : constant.colorMid)
+                                            : constant.colorDisabled
+                    elide: Text.ElideRight
+                    text: "(collapsed)"
+                }
             }
 
             Text {
+                visible: model.visibility == "visible"
                 id: commentBodyText
                 anchors { left: parent.left; right: parent.right }
                 font.pixelSize: constant.fontSizeDefault

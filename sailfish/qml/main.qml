@@ -66,7 +66,7 @@ ApplicationWindow {
             else if (subredditregex.test(url))
             {
                 var subreddit = subredditregex.exec(url)[2];
-                pageStack.push(Qt.resolvedUrl("MainPage.qml"), {}).refresh(subreddit);
+                pageStack.push(Qt.resolvedUrl("SubredditPage.qml"), {subreddit: subreddit});
             }
             else
                 createOpenLinkDialog(url);

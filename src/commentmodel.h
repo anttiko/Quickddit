@@ -42,7 +42,8 @@ public:
         DepthRole,
         IsScoreHiddenRole,
         IsValidRole,
-        IsAuthorRole
+        IsAuthorRole,
+        VisibilityRole
     };
 
     enum SortType {
@@ -82,8 +83,13 @@ public:
     // QML functions
     void refresh(bool refreshOlder);
     Q_INVOKABLE int getParentIndex(int index) const;
+    Q_INVOKABLE int getRootIndex(int index) const;
+    Q_INVOKABLE int getNextIndex(int index) const;
+    Q_INVOKABLE int getPrevIndex(int index) const;
     Q_INVOKABLE void changeLinkLikes(const QString &fullname, int likes);
     Q_INVOKABLE void changeLikes(const QString &fullname, int likes);
+
+    Q_INVOKABLE void collapse(int index);
 
 protected:
     QHash<int, QByteArray> customRoleNames() const;
@@ -109,6 +115,7 @@ private:
     QNetworkReply *m_reply;
 
     static QString getSortString(SortType sort);
+    QList<int> getChildren(int index);
 };
 
 #endif // COMMENTMODEL_H

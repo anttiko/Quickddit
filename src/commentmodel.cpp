@@ -93,6 +93,15 @@ QVariant CommentModel::data(const QModelIndex &index, int role) const
     case IsScoreHiddenRole: return comment.isScoreHidden();
     case IsValidRole: return comment.author() != "[deleted]";
     case IsAuthorRole: return comment.author() == manager()->settings()->redditUsername();
+    case VisibilityRole:
+    {
+        switch (comment.visibility())
+        {
+        case CommentObject::Visible: return "visible";
+        case CommentObject::Collapsed: return "collapsed";
+        default: return "hidden";
+        }
+    }
     default:
         qCritical("CommentModel::data(): Invalid role");
         return QVariant();
@@ -280,6 +289,90 @@ int CommentModel::getParentIndex(int index) const
     return index;
 }
 
+int CommentModel::getRootIndex(int index) const
+{
+    if (index > 0)
+    {
+        for (int i = index - 1; i >= 0; --i) {
+            if (m_commentList.at(i).depth() == 0)
+                return i;
+        }
+    }
+    qWarning("CommentModel::getRootIndex(): Cannot find root index");
+    return index;
+}
+
+int CommentModel::getNextIndex(int index) const
+{
+    int l = m_commentList.length();
+    int depth = m_commentList.at(index).depth();
+    if (index + 1 < l)
+    {
+        for (int i = index + 1; i < l; ++i) {
+            if (m_commentList.at(i).depth() == depth)
+                return i;
+        }
+    }
+    return index;
+}
+
+int CommentModel::getPrevIndex(int index) const
+{
+    if (index > 0)
+    {
+        int depth = m_commentList.at(index).depth();
+        for (int i = index - 1; i >=0; --i) {
+            if (m_commentList.at(i).depth() == depth)
+                return i;
+        }
+    }
+    return index;
+}
+
+QList<int> CommentModel::getChildren(int index)
+{
+    int l = m_commentList.length();
+    int depth = m_commentList.at(index).depth();
+    QList<int> children;
+    int i = index + 1;
+    int childDepth = 0;
+    do
+    {
+        childDepth = m_commentList.at(i).depth();
+        if (childDepth > depth)
+            children.append(i);
+        i++;
+    } while (i < l && childDepth > depth);
+    return children;
+}
+
+void CommentModel::collapse(int index)
+{
+    CommentObject item = m_commentList.at(index);
+    QList<int> children = getChildren(index);
+    switch (item.visibility())
+    {
+        case CommentObject::Visible:
+            m_commentList[index].setVisibility(CommentObject::Collapsed);
+            foreach (int child, children) {
+                m_commentList[child].setVisibility(CommentObject::ChildCollapsed);
+            }
+            break;
+        case CommentObject::Collapsed:
+            m_commentList[index].setVisibility(CommentObject::Visible);
+            foreach (int child, children) {
+                m_commentList[child].setVisibility(CommentObject::Visible);
+            }
+            break;
+        default:
+            break;
+    }
+    int lastIndex = index;
+    if (!children.isEmpty())
+        lastIndex = children.last();
+    emit dataChanged(this->index(index), this->index(lastIndex));
+}
+
 void CommentModel::changeLinkLikes(const QString &fullname, int likes)
 {
     if (!m_link.type() == QVariant::Map) {
@@ -330,6 +423,7 @@ QHash<int, QByteArray> CommentModel::customRoleNames() const
     roles[IsScoreHiddenRole] = "isScoreHidden";
     roles[IsValidRole] = "isValid";
     roles[IsAuthorRole] = "isAuthor";
+    roles[VisibilityRole] = "visibility";
     return roles;
 }
 

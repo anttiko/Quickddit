@@ -35,6 +35,12 @@ public:
         DistinguishedBySpecial
     };
 
+    enum CommentVisibility {
+        Visible,
+        Collapsed, // this is collapsed
+        ChildCollapsed // the parent of this comment is collapsed
+    };
+
     CommentObject();
     CommentObject(const CommentObject &other);
     CommentObject &operator= (const CommentObject &other);
@@ -76,6 +82,9 @@ public:
 
     bool isScoreHidden() const;
     void setScoreHidden(bool scoreHidden);
+
+    void setVisibility(CommentVisibility v);
+    CommentVisibility visibility() const;
 
 private:
     QExplicitlySharedDataPointer<CommentObjectData> d;

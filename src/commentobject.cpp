@@ -25,7 +25,7 @@ class CommentObjectData : public QSharedData
 {
 public:
     CommentObjectData() : score(0), likes(0), distinguished(CommentObject::NotDistinguished),
-        depth(0), isSubmitter(false), isScoreHidden(false) {}
+        depth(0), isSubmitter(false), isScoreHidden(false), visibility(CommentObject::Visible) {}
 
     QString fullname;
     QString author;
@@ -39,6 +39,7 @@ public:
     int depth;
     bool isSubmitter;
     bool isScoreHidden;
+    CommentObject::CommentVisibility visibility;
 
 private:
     Q_DISABLE_COPY(CommentObjectData)
@@ -194,4 +195,14 @@ bool CommentObject::isScoreHidden() const
 void CommentObject::setScoreHidden(bool scoreHidden)
 {
     d->isScoreHidden = scoreHidden;
+}
+
+void CommentObject::setVisibility(CommentVisibility v)
+{
+    d->visibility = v;
+}
+
+CommentObject::CommentVisibility CommentObject::visibility() const
+{
+    return d->visibility;
 }

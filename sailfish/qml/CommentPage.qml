@@ -364,7 +364,9 @@ AbstractPage {
                         commentDelegate.ListView.view.currentIndex = rootIndex;
                         commentDelegate.ListView.view.currentItem.highlight();
                     })
-
+                    dialog.collapse.connect(function() {
+                        commentModel.collapse(index);
+                    })
                     dialog.replyClicked.connect(function() { __createCommentDialog("Reply Comment", model.fullname); });
                     dialog.editClicked.connect(function() {
                         __createCommentDialog("Edit Comment", model.fullname, model.rawBody, true);
