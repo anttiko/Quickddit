@@ -48,7 +48,7 @@ AbstractPage {
         PullDownMenu {
             MenuItem {
                 text: "Go to /r/" + link.subreddit
-                onClicked: pageStack.push(Qt.resolvedUrl("MainPage.qml"), {}).refresh(link.subreddit);
+                onClicked: pageStack.push(Qt.resolvedUrl("SubredditPage.qml"), {subreddit: link.subreddit});
             }
             MenuItem {
                 enabled: !!link

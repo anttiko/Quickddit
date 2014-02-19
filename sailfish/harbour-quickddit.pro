@@ -109,4 +109,5 @@ OTHER_FILES += \
     qml/MessageDelegate.qml \
     qml/MessageMenu.qml \
     qml/LoadingFooter.qml \
-    qml/SimpleListItem.qml
+    qml/SimpleListItem.qml \
+    qml/SubredditPage.qml
