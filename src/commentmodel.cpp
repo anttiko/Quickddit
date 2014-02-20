@@ -336,13 +336,15 @@ QList<int> CommentModel::getChildren(int index)
     QList<int> children;
     int i = index + 1;
     int childDepth = 0;
-    do
+    while (i < l)
     {
         childDepth = m_commentList.at(i).depth();
         if (childDepth > depth)
             children.append(i);
+        else
+            break;
         i++;
-    } while (i < l && childDepth > depth);
+    }
     return children;
 }
 
