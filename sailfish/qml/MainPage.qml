@@ -88,7 +88,7 @@ AbstractPage {
         width: parent.width
         model: linkModel
 
-        PageHeader { title: mainPage.title }
+        header: PageHeader { title: mainPage.title }
 
         PullDownMenu {
             MenuItem {

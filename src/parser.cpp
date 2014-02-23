@@ -321,8 +321,25 @@ QList< QPair<QString, QString> > Parser::parseImgurImages(const QByteArray &json
     const QVariant data = root.toMap().value("data");
 
     if (data.type() == QVariant::Map) {
-        imageAndThumbUrlList.append(parseImgurImageMap(data.toMap()));
+        if (data.toMap().contains("is_album")) {
+            // gallery image or album
+            QVariantMap gallery = data.toMap();
+            if (gallery.value("is_album").toBool())
+            {
+                // gallery album
+                foreach (const QVariant &imageJson, gallery.value("images").toList()) {
+                    imageAndThumbUrlList.append(parseImgurImageMap(imageJson.toMap()));
+                }
+            } else {
+                // single gallery image
+                imageAndThumbUrlList.append(parseImgurImageMap(gallery));
+            }
+        } else {
+            // single image
+            imageAndThumbUrlList.append(parseImgurImageMap(data.toMap()));
+        }
     } else if (data.type() == QVariant::List) {
+        // album
         foreach (const QVariant &imageJson, data.toList()) {
             imageAndThumbUrlList.append(parseImgurImageMap(imageJson.toMap()));
         }

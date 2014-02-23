@@ -104,6 +104,14 @@ void ImgurManager::refresh()
             id.remove(hashIndex, id.length() - hashIndex);
         }
         requestUrl += "/album/" + id + "/images";
+    } else if (id.startsWith("gallery/")) {
+        id.remove(0, 8);
+        if (id.contains('#')) {
+            int hashIndex = id.indexOf('#');
+            m_selectedIndex = id.mid(hashIndex + 1).toInt();
+            id.remove(hashIndex, id.length() - hashIndex);
+        }
+        requestUrl += "/gallery/" + id;
     } else if (!id.contains('/')) {
         if (id.contains('#'))
             id.remove(id.indexOf('#'), id.length() - id.indexOf('#'));
